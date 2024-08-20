@@ -59,8 +59,9 @@ return res.status(200).json({
 
 module.exports.updateProfile=async(req,res)=>{
    let {...rest}=req.body;
+   console.log(rest)
     try{
-await usermodel.findOne({_id:req.user.email._id},{$set:rest})
+await usermodel.updateOne({_id:req.user.email._id},{$set:rest})
 return res.status(200).json({
     message:"SUCESS"
 })
