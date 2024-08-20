@@ -48,6 +48,11 @@ app.get('/metadata', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch metadata' });
     }
   });
+  app.get('/',(req,res)=>{
+    return res.status(200).json({
+      message:"SUCESS"
+    })
+  })
   
 app.use(authRoutes)
 app.use(bentoroutes)
