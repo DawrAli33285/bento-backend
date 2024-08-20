@@ -1,0 +1,80 @@
+let mongoose=require('mongoose')
+
+let bentoSchema=mongoose.Schema({
+    user:{
+type:mongoose.Schema.ObjectId,
+ref:'user'
+    },
+    logo:{
+   type:String     
+    },
+    content:{
+        type:String,
+
+    },
+    h:{
+        type:Number,
+        required:true
+    },
+    i:{
+        type:String,
+        required:true
+    },
+    isBounded:{
+        type:Boolean
+    },
+    isDraggable:{
+        type:Boolean
+    },
+    isResizeable:{
+        type:Boolean
+    },
+    maxH:{
+        type:Number
+    },
+    maxW:{
+        type:Number
+    },
+    minH:{
+        type:Number
+    },
+    minW:{
+        type:Number
+    },
+    moved:{
+        type:Boolean
+    },
+    resizeHandles:{
+        type:String
+    },
+    static:{
+        type:Boolean
+    },
+    type:{
+        type:String
+    },
+    w:{
+        type:Number,
+        required:true
+    },
+    x:{
+        type:Number,
+        required:true
+    },
+    y:{
+        type:Number,
+        required:true
+    },
+    title:{
+        type:String
+    },
+    caption:{
+        type:String
+    },
+    link:{
+        type:String
+    }
+},{timestamps:true})
+
+let bentoModel=mongoose.model('bento',bentoSchema)
+module.exports=bentoModel
