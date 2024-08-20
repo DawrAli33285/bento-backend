@@ -80,6 +80,12 @@ module.exports.socialRegister=async(req,res)=>{
 let {email,userName}=req.body;
 let password=uuidv4();  
     try{
+        let userFound=await userModel.findOne({email})
+        if(userFound){
+            return res.status(400).json({
+                error:"Email already taken"
+            })
+        }
 await userModel.create({
     email,
     userName,
