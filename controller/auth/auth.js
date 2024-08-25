@@ -77,7 +77,7 @@ if(!emailFound){
 
 
 module.exports.socialRegister=async(req,res)=>{
-let {email,userName}=req.body;
+let {email,userName,profilePic}=req.body;
 let password=uuidv4();  
     try{
         let userFound=await userModel.findOne({email})
@@ -90,6 +90,7 @@ await userModel.create({
     email,
     userName,
     password,
+    picURL:profilePic,
     signUpWithGoogle:true
 })
 return res.status(200).json({
