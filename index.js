@@ -82,11 +82,10 @@ app.get('/metadata', async (req, res) => {
     // Write the screenshot buffer to the file
     fs.writeFileSync(filePath, screenshotBuffer);
 
-    console.log(`Screenshot saved at: ${filePath}`);
-
+  
     const imageUrl = await cloudinaryUpload(filePath);
     fs.unlinkSync(filePath)
-    console.log(imageUrl)
+  
     return res.status(200).json({
       title,
       screenshot:imageUrl.url
