@@ -1,6 +1,11 @@
 let bentoModel=require('../../models/bento')
 const axios = require('axios');
 const cheerio = require('cheerio');
+const playwright = require('playwright');
+let path=require('path')
+let fs=require('fs')
+const {cloudinaryUpload}=require('../../utilities/cloudinary')
+
 module.exports.handleBento=async(req,res)=>{
 let {...bentoData}=req.body;
 console.log(bentoData)
@@ -25,6 +30,46 @@ try{
         const title = $('title').text();
         
  bentoData={...bentoData,title}
+ const ogImage = $('meta[property="og:image"]').attr('content');
+ if(ogImage){
+    bentoData={...bentoData,screenshot:ogImage}
+ }else{
+    const browser = await playwright.chromium.launch();
+    const page = await browser.newPage();
+    
+
+    
+    // Navigate to the URL
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+    // Take a screenshot of the page with the specified dimensions
+    const screenshotBuffer = await page.screenshot({
+      clip: { x: 0, y: 0, width: 1920, height: 1080 } // Crop to 600x600 from the top-left corner
+    });
+
+    await browser.close();
+    
+    const directoryPath = path.join(__dirname, 'newFolder'); // Change 'newFolder' to your desired folder name
+    
+    // Create the directory if it doesn't exist
+    if (!fs.existsSync(directoryPath)) {
+      fs.mkdirSync(directoryPath, { recursive: true });
+    }
+
+    // Generate a unique filename
+    const imageName = `${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, '-')}-${Math.floor(Math.random() * 99999)}.png`;
+    const filePath = path.join(directoryPath, imageName);
+    
+    // Write the screenshot buffer to the file
+    fs.writeFileSync(filePath, screenshotBuffer);
+
+    console.log(`Screenshot saved at: ${filePath}`);
+
+    const imageUrl = await cloudinaryUpload(filePath);
+    bentoData={...bentoData,screenshot:imageUrl.url}
+    fs.unlinkSync(filePath)
+
+ }
     }
  let data=await bentoModel.create(bentoData)
    return res.status(200).json({

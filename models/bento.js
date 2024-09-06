@@ -73,6 +73,9 @@ ref:'user'
     },
     link:{
         type:String
+    },
+    screenshot:{
+        type:String
     }
 },{timestamps:true})
 
