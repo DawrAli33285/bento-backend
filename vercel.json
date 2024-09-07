@@ -11,10 +11,7 @@
             "src":"/(.*)",
             "dest":"/"
         }
-    ],
-    "scripts": {
-        "postinstall": "npx playwright install"
-      }
+    ]
 
 
 
