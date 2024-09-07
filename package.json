@@ -24,6 +24,7 @@
     "nodemailer": "^6.9.15",
     "nodemon": "^3.1.4",
     "playwright": "^1.47.0",
+    "streamifier": "^0.1.1",
     "uuid": "^10.0.0",
     "webshot-node": "^0.18.3"
   }
