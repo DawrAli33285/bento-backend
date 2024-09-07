@@ -71,6 +71,7 @@ module.exports.handleBento = async (req, res) => {
       console.timeEnd('handleBento'); // End the timer and log the elapsed time
       return res.status(200).json({ data: savedData });
     } catch (e) {
+      
       console.error(e.message);
       return res.status(400).json({ error: "Server error, please try again" });
     }
