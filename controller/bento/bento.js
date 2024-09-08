@@ -62,55 +62,70 @@ module.exports.handleBento = async (req, res) => {
       const instagramRegex =/instagram\.com\//;
       let spotifyRegex=/spotify\.com\//
       let githubRegex = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9-]+\/?$/;
-      
+      let youtubeRegex= /youtube\.com\/(c\/|@|results|user|channel)/
       if (instagramRegex.test(url)) {
-        console.log("INSTA LINK")
-        const regex = /https:\/\/www\.instagram\.com\/([^\/?]+)/;
-        const match = url.match(regex);
-
+        console.log("INSTA LINK");
         const client = new ApifyClient({ token: "apify_api_njoleNAQyMd1U9Dl77EOxCaP0Y8Ai910SI2s" });
+
+   
+        const usernameRegex = /instagram\.com\/([^\/?]+)/;
+        const username = url.match(usernameRegex)[1];
+        
+ 
+        const input = {
+            addParentData: false,
+            directUrls: [url],
+            enhanceUserSearchWithFacebookPage: false,
+            isUserReelFeedURL: false,
+            isUserTaggedFeedURL: false,
+            resultsLimit: 4,
+            resultsType: "stories",
+            searchLimit: 1
+        };
+        
+        // Fetch posts and profile data concurrently
+        const [postRun, profileRun] = await Promise.all([
+            client.actor('shu8hvrXbJbY3Eb9W').call(input),
+            client.actor('dSCLg0C3YEZ83HzYX').call({ usernames: [username] })
+        ]);
+        
+        // Fetch items and profile data concurrently
+        const [postsData, profileData] = await Promise.all([
+            client.dataset(postRun.defaultDatasetId).listItems(),
+            client.dataset(profileRun.defaultDatasetId).listItems()
+        ]);
+        
+        // Destructure the items directly
+        const { items: postsItems } = postsData;
+        const { items: profileItems } = profileData;
         
     
-      const input = {
-          directUrls: [url],
-          resultsType: 'posts',
-          resultsLimit: 10
+        // Get followers count
+        const followers = profileItems[0]?.followersCount?.toString() || '0';
+        
+        // Filter and map image URLs concurrently in one step
+        const imageUrls = postsItems
+            .reduce((acc, { displayUrl }) => {
+                if (displayUrl && acc.length < 4) acc.push(displayUrl);
+                return acc;
+            }, []);
+        
+        // Upload images to Cloudinary concurrently
+        const uploadedImageUrls = await Promise.all(imageUrls.map(cloudinaryUpload));
+        
+        // Extract the URLs from the Cloudinary upload results and join them into a single string
+        const joinedImageUrls = uploadedImageUrls
+            .filter(({ url }) => url)
+            .map(({ url }) => url)
+            .join(',');
+        
+        // Structure the final data
+        bentoData = { 
+            ...bentoData, 
+            screenshot: joinedImageUrls,
+            title: "@" + (postsItems[0]?.ownerUsername || 'Unknown'),
+            followers
         };
-
-        const run = await client.actor('shu8hvrXbJbY3Eb9W').call(input);
-       
-        const { items } = await client.dataset(run.defaultDatasetId).listItems();
-        const inputprofile = {
-          "usernames": [
-            items[0]?.ownerUsername
-          ]
-      };
-  
-      const runprofile = await client.actor("dSCLg0C3YEZ83HzYX").call(inputprofile);
-      const profileitems = await client.dataset(runprofile.defaultDatasetId).listItems();
-  
-      let followers=profileitems.items[0].followersCount
-      followers=followers.toString();
-
-        // Filter out only image items and limit to the first 4
-      console.log(items)
-      console.log("items")
-        let imageUrls = items
-        .filter(item => item.displayUrl)
-          .slice(0, 4)
-          .map(item => item.displayUrl);
-          const uploadPromises = imageUrls.map((imageUrl) => cloudinaryUpload(imageUrl));
-          const uploadedImageUrls = await Promise.all(uploadPromises);
-  
-          // Extract the URLs from the Cloudinary upload results
-          const cloudinaryUrls = uploadedImageUrls.map((result) => result.url);
-  
-          // Join URLs into a single string
-          const joinedImageUrls = cloudinaryUrls.join(',');
-  
-          bentoData = { ...bentoData, screenshot: joinedImageUrls,title:"@"+items[0]?.ownerUsername,followers};
-       
-
         // Optional: If you still want to upload a combined image to Cloudinary
         // Uncomment the following code if you need a combined image upload
         /*
@@ -118,6 +133,62 @@ module.exports.handleBento = async (req, res) => {
         const imageUrlPromise = cloudinaryUpload(combinedImageBuffer);
         bentoData = { ...bentoData, screenshot: (await imageUrlPromise).url };
         */
+      }else if(youtubeRegex.test(url)){
+        // Initialize the ApifyClient with API token
+        console.log("YOUTUBE");
+
+        const client = new ApifyClient({ token: 'apify_api_njoleNAQyMd1U9Dl77EOxCaP0Y8Ai910SI2s' });
+        
+        // Prepare Actor input
+        const input = {
+          downloadSubtitles: false,
+          hasCC: false,
+          hasLocation: false,
+          hasSubtitles: false,
+          is360: false,
+          is3D: false,
+          is4K: false,
+          isBought: false,
+          isHD: false,
+          isHDR: false,
+          isLive: false,
+          isVR180: false,
+          maxResultStreams: 0,
+          maxResults: 4,
+          maxResultsShorts: 0,
+          preferAutoGeneratedSubtitles: false,
+          saveSubsToKVS: false,
+          startUrls: [{ url }]
+        };
+        
+        try {
+          const run = await client.actor("h7sDV53CddomktSi5").call(input);
+        
+          console.log('Fetching results from dataset...');
+          const { items } = await client.dataset(run.defaultDatasetId).listItems();
+        
+          if (items.length === 0) {
+            console.log('No items found.');
+            return;
+          }
+        
+          const followers = items[0]?.numberOfSubscribers || 0;
+          let title=items[0]?.channelName||""
+          const screenshot = items.map(item => item.thumbnailUrl).join(',');
+        
+          bentoData = {
+            ...bentoData,
+            followers,
+            screenshot,
+            title
+          };
+        
+         
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+        
+
       }else if(githubRegex.test(url)){
 console.log("GIT")
        
@@ -188,11 +259,12 @@ console.log(e.message)
       }else {
  
         const [axiosData, pageInstance] = await Promise.all([
-          fetchDataWithAxios(url),
+          axios.get(url),
           getBrowserInstance(),
         ]);
 
         const { data } = axiosData;
+        
         const $ = cheerio.load(data);
         const title = $('title').text();
         bentoData = { ...bentoData, title };
