@@ -274,7 +274,7 @@ console.log(e.message)
         if (ogImage) {
           bentoData = { ...bentoData, screenshot: ogImage };
         } else {
-          await pageInstance.goto(url, { waitUntil: 'networkidle', timeout: 10000 });
+          await pageInstance.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
 
           const screenshotBuffer = await pageInstance.screenshot({
             type: 'jpeg',
