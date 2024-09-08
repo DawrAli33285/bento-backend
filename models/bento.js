@@ -76,6 +76,12 @@ ref:'user'
     },
     screenshot:{
         type:String
+    },
+    spotify:{
+        type:[]
+    },
+    followers:{
+        type:String
     }
 },{timestamps:true})
 
