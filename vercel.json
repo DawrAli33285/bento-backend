@@ -11,15 +11,6 @@
             "src":"/(.*)",
             "dest":"/"
         }
-    ],
-    "build": {
-        "env": {
-          "NODE_ENV": "production"
-        },
-        "commands": [
-          "npx playwright install",
-          "npm run build"
-        ]
-      }
+    ]
     
 }
