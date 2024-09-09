@@ -115,3 +115,4 @@ app.use(profileroutes)
 app.listen(process.env.PORT,()=>{
 console.log(`Listening to PORT ${process.env.PORT}`)
 })
+server.timeout = 60000;

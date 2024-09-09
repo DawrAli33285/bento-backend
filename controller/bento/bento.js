@@ -27,8 +27,6 @@ const getBrowserInstance = async () => {
 
 
 module.exports.handleBento = async (req, res) => {
-  console.time('handleBento'); 
-
   let { ...bentoData } = req.body;
   bentoData = { ...bentoData, user: req.user.email._id };
 
@@ -272,7 +270,7 @@ console.log(e.message)
 
     const savedData = await bentoModel.create(bentoData);
 
-    console.timeEnd('handleBento');
+   
     return res.status(200).json({ data: savedData });
   } catch (e) {
     console.error(e.message);
