@@ -112,7 +112,8 @@ app.use(authRoutes)
 app.use(bentoroutes)
 app.use(profileroutes)
 
-app.listen(process.env.PORT,()=>{
-console.log(`Listening to PORT ${process.env.PORT}`)
-})
-server.timeout = 60000;
+const server = app.listen(process.env.PORT, () => {
+  console.log(`Listening to PORT ${process.env.PORT}`);
+});
+
+server.timeout = 60000;  
