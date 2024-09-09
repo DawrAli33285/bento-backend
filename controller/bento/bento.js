@@ -40,8 +40,10 @@ module.exports.handleBento = async (req, res) => {
       if (!/^https?:\/\//i.test(url)) {
         url = `https://${url}`;
       }
-      const instagramRegex =/instagram\.com\//;
-      let spotifyRegex=/spotify\.com\//
+      const instagramRegex =/^https:\/\/www\.instagram\.com\/[^\/]+\/?(?:\?.*)?$/;
+
+
+const spotifyRegex = /^https:\/\/open\.spotify\.com\/(playlist|track|album)\/[^\/]+\/?$/;
       let githubRegex = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9-]+\/?$/;
       let youtubeRegex= /youtube\.com\/(c\/|@|results|user|channel)/
       if (instagramRegex.test(url)) {
@@ -59,7 +61,7 @@ module.exports.handleBento = async (req, res) => {
             enhanceUserSearchWithFacebookPage: false,
             isUserReelFeedURL: false,
             isUserTaggedFeedURL: false,
-            resultsLimit: 4,
+            resultsLimit: 6,
             resultsType: "stories",
             searchLimit: 1
         };
@@ -215,7 +217,16 @@ console.log(e.message)
      }
 
       }else if(spotifyRegex.test(url)){
+        const [axiosData, pageInstance] = await Promise.all([
+          axios.get(url),
+          getBrowserInstance(),
+        ]);
 
+        const { data } = axiosData;
+        
+        const $ = cheerio.load(data);
+        const title = $('title').text();
+       console.log(title)
         const client = new ApifyClient({ token: 'apify_api_njoleNAQyMd1U9Dl77EOxCaP0Y8Ai910SI2s' });
 
         const input = {
@@ -224,13 +235,12 @@ console.log(e.message)
         };
 
         const run = await client.actor('XD6mekdMpbuy5aqiI').call(input);
-        console.log('LOADING');
+     
         let { items } = await client.dataset(run.defaultDatasetId).listItems();
 
        items=items.slice(0,4)
-        console.log("ITEMS")
-        console.log(items)
-        bentoData = { ...bentoData, spotify:items };
+    
+        bentoData = { ...bentoData, spotify:items,title };
       }else {
  
         const [axiosData, pageInstance] = await Promise.all([
